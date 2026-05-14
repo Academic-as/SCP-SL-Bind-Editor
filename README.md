@@ -7,7 +7,8 @@
 ---
 
 ## 🔗 Использование
-Инструмент работает прямо в браузере. Выберите нужную клавишу на виртуальной клавиатуре, введите команду и экспортируйте готовый файл.
+Приложение доступно в браузере по ссылке:  
+[![Open Website](https://img.shields.io/badge/Открыть_инструмент-Click_Here-00f2ff?style=for-the-badge&logo=googlechrome&logoColor=white)](https://academic-as.github.io/SCP-SL-Bind-Editor/)
 
 ---
 
