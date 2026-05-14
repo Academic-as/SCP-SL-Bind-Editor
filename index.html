@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLX-P | SCP:SL Bind Editor</title>
+    <link rel="icon" type="image/png" href="flxp-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-space: #05070a;
+            --flxp-purple: #8a2be2;
+            --flxp-cyan: #00f2ff;
+            --key-bg: rgba(255, 255, 255, 0.03);
+            --key-border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(13, 17, 23, 0.85);
+            --danger: #ff3e3e;
+            --warning: #f1c40f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--dark-space);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at 10% 10%, rgba(138, 43, 226, 0.15) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 90%, rgba(0, 242, 255, 0.1) 0%, transparent 40%);
+            min-height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        header { padding: 20px 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(15px); }
+        .header-brand { display: flex; align-items: center; gap: 15px; }
+        .flxp-logo { width: 32px; height: 32px; object-fit: contain; }
+        .flxp-gradient-text { background: linear-gradient(135deg, var(--flxp-purple) 0%, var(--flxp-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 1.6rem; }
+
+        .app-container { display: grid; grid-template-columns: 1fr 380px; gap: 30px; padding: 30px 50px; max-width: 1700px; margin: 0 auto; width: 100%; }
+
+        .tabs { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .tab-btn { background: none; border: none; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase; cursor: pointer; padding: 10px 5px; border-bottom: 2px solid transparent; transition: 0.3s; font-size: 12px; }
+        .tab-btn.active { color: var(--flxp-cyan); border-color: var(--flxp-cyan); }
+        .badge { background: var(--flxp-purple); color: white; font-size: 8px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .keyboard-layout-wrapper { display: flex; gap: 30px; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.03); }
+        .kb-section { display: flex; flex-direction: column; gap: 8px; }
+        .row { display: flex; gap: 8px; }
+
+        .key { background: var(--key-bg); border: 1px solid var(--key-border); border-radius: 6px; min-width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; transition: 0.1s; color: rgba(255,255,255,0.4); position: relative; text-transform: uppercase; }
+        .key:hover { border-color: var(--flxp-cyan); background: rgba(0, 242, 255, 0.1); color: white; transform: translateY(-2px); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
+        .key.active { background: rgba(138, 43, 226, 0.2); border-color: var(--flxp-purple); color: var(--flxp-cyan); }
+        .key.has-bind::after { content: ''; position: absolute; top: 5px; right: 5px; width: 5px; height: 5px; background: var(--flxp-cyan); border-radius: 50%; }
+
+        .w-backspace { width: 104px; } .w-tab { width: 75px; } .w-caps { width: 85px; } .w-enter { width: 112px; } .w-shift { width: 130px; } .w-space { width: 340px; }
+        .numpad-grid { display: grid; grid-template-columns: repeat(3, 48px) 48px; grid-template-rows: repeat(5, 48px); gap: 8px; }
+
+        .glass-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 25px; margin-bottom: 20px; }
+        .panel-title { font-size: 10px; color: var(--flxp-purple); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; display: block; font-weight: 800; }
+        .input-field { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: white; font-family: 'JetBrains Mono', monospace; margin-bottom: 10px; }
+        
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 800; text-transform: uppercase; font-size: 11px; margin-bottom: 8px; transition: 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, var(--flxp-purple), var(--flxp-cyan)); color: white; }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: white; }
+        .btn-danger { background: rgba(255, 62, 62, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+
+        .terminal { background: #000; padding: 20px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--flxp-cyan); border-left: 2px solid var(--flxp-purple); line-height: 1.6; }
+        .path-box { margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; }
+
+        .info-card { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; margin-top: 10px; }
+        .info-title { font-size: 10px; margin-bottom: 8px; font-weight: 800; text-transform: uppercase; }
+        .info-text { color: rgba(148, 163, 184, 0.8); font-size: 11px; line-height: 1.4; }
+        .author-link { color: var(--flxp-cyan); font-weight: bold; text-decoration: none; }
+        
+        .bind-item { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+        .bind-key-code { color: #fff; font-weight: bold; }
+        .bind-command { color: var(--flxp-cyan); }
+        .bind-key-name { color: rgba(255, 255, 255, 0.4); margin-left: 4px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-brand">
+        <img src="flxp-icon.png" alt="FLXP Logo" class="flxp-logo">
+        <div class="flxp-gradient-text">FLX-P | SCP:SL Bind Editor</div>
+    </div>
+    <div id="clock" style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--flxp-purple)">00:00:00</div>
+</header>
+
+<div class="app-container">
+    <div class="main-side">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('creator')">Bind Editor</button>
+            <button class="tab-btn" onclick="switchTab('wipe')">Wipe System <span class="badge">DEV</span></button>
+        </div>
+
+        <div id="creator-section" class="section active">
+            <div class="keyboard-layout-wrapper">
+                <div id="main-kb" class="kb-section"></div>
+                <div class="kb-section"><span class="panel-title" style="text-align: center;">Numpad</span><div id="numpad-kb" class="numpad-grid"></div></div>
+            </div>
+            <div class="glass-card" style="margin-top: 25px;">
+                <span class="panel-title">External Input</span>
+                <div class="row">
+                    <div class="key" data-key="Mouse4">M4</div>
+                    <div class="key" data-key="Mouse5">M5</div>
+                    <div class="key" data-key="MouseWheel">Wheel</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="wipe-section" class="section">
+            <div class="glass-card">
+                <span class="panel-title" style="color: var(--warning)">Manual Reset Required</span>
+                <h2 style="margin-bottom: 10px;">Сброс настроек</h2>
+                <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 20px;">Для очистки биндов в игре необходимо вручную удалить содержимое файла конфигурации.</p>
+                <div class="terminal">
+                    <div>Пожалуйста, перейдите по пути:</div>
+                    <div class="path-box" onclick="copyPath()"><code>C:\Users\(ВАШ ПОЛЬЗОВАТЕЛЬ)\AppData\Roaming\SCP Secret Laboratory\cmdbinding.txt</code></div>
+                    <div>* Нажмите на путь, чтобы скопировать путь к файлу</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="glass-card">
+            <span class="panel-title">Editor</span>
+            <div id="key-info" style="margin-bottom: 10px; font-size: 13px;">Select a Key</div>
+            <input type="text" id="cmd-input" class="input-field" placeholder="Enter command..." disabled>
+            <div id="actions" style="display: none;">
+                <button class="btn btn-primary" onclick="saveBind()">Save Bind</button>
+                <button class="btn btn-danger" onclick="deleteBind()">Remove</button>
+            </div>
+            <div class="terminal" id="preview" style="font-size: 10px; padding: 10px;">Waiting...</div>
+        </div>
+
+        <div class="glass-card">
+            <span class="panel-title">File Operations</span>
+            <button class="btn btn-primary" onclick="exportFile()">Export .txt</button>
+            <button class="btn btn-outline" onclick="document.getElementById('file-in').click()">Import .txt</button>
+            <input type="file" id="file-in" hidden accept=".txt" onchange="importFile(this)">
+        </div>
+
+        <div class="glass-card">
+            <span class="panel-title">Active Database</span>
+            <div id="binds-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+            <div class="info-card">
+                <h2 class="flxp-gradient-text info-title">Не официальный продукт FLX-project</h2>
+                <p class="info-text">Создано <a class="author-link" href="https://discord.com/users/534028333982285842" target="_blank">Academic (@academic_as)</a> специально для проекта.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const unityCodes = {
+        'A': 97, 'B': 98, 'C': 99, 'D': 100, 'E': 101, 'F': 102, 'G': 103, 'H': 104, 'I': 105, 'J': 106, 'K': 107, 'L': 108, 'M': 109, 'N': 110, 'O': 111, 'P': 112, 'Q': 113, 'R': 114, 'S': 115, 'T': 116, 'U': 117, 'V': 118, 'W': 119, 'X': 120, 'Y': 121, 'Z': 122,
+        '0': 48, '1': 49, '2': 50, '3': 51, '4': 52, '5': 53, '6': 54, '7': 55, '8': 56, '9': 57,
+        'Esc': 27, 'F1': 282, 'F2': 283, 'F3': 284, 'F4': 285, 'F5': 286, 'F6': 287, 'F7': 288, 'F8': 289, 'F9': 290, 'F10': 291, 'F11': 292, 'F12': 293,
+        'Backspace': 8, 'Tab': 9, 'Enter': 13, 'Caps': 301, 'Shift': 304, 'Ctrl': 306, 'Alt': 308, 'Space': 32,
+        'Num0': 256, 'Num1': 257, 'Num2': 258, 'Num3': 259, 'Num4': 260, 'Num5': 261, 'Num6': 262, 'Num7': 263, 'Num8': 264, 'Num9': 265,
+        'Num.': 266, 'Num/': 267, 'Num*': 268, 'Num-': 269, 'NumPlus': 270, 'NumEnter': 271, 'Mouse4': 326, 'Mouse5': 327
+    };
+
+    const mainLayout = [
+        ['Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'],
+        ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
+        ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
+        ['Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'", 'Enter'],
+        ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'Up'],
+        ['Ctrl', 'Win', 'Alt', 'Space', 'Alt', 'Ctrl', 'Left', 'Down', 'Right']
+    ];
+
+    let binds = {}; 
+    let selectedKey = null;
+
+    function init() {
+        const mkb = document.getElementById('main-kb');
+        mainLayout.forEach(row => {
+            const r = document.createElement('div'); r.className = 'row';
+            row.forEach(k => {
+                const el = document.createElement('div'); el.className = 'key'; el.textContent = k; el.dataset.key = k;
+                if(['Backspace','Enter','Shift','Space','Tab','Caps'].includes(k)) el.classList.add('w-'+k.toLowerCase());
+                el.onclick = () => select(k); r.appendChild(el);
+            });
+            mkb.appendChild(r);
+        });
+
+        const nkb = document.getElementById('numpad-kb');
+        const numData = [
+            {k:'Num/', g:'1/1'}, {k:'Num*', g:'1/2'}, {k:'Num-', g:'1/3'}, {k:'NumPlus', g:'1/4/3/5'},
+            {k:'Num7', g:'2/1'}, {k:'Num8', g:'2/2'}, {k:'Num9', g:'2/3'},
+            {k:'Num4', g:'3/1'}, {k:'Num5', g:'3/2'}, {k:'Num6', g:'3/3'}, {k:'NumEnter', g:'3/4/5/5'},
+            {k:'Num1', g:'4/1'}, {k:'Num2', g:'4/2'}, {k:'Num3', g:'4/3'},
+            {k:'Num0', g:'5/1/6/3'}, {k:'Num.', g:'5/3'}
+        ];
+        numData.forEach(d => {
+            const el = document.createElement('div'); el.className = 'key'; el.textContent = d.k.replace('Num',''); el.dataset.key = d.k; el.style.gridArea = d.g;
+            if(['Num0','NumPlus','NumEnter'].includes(d.k)) el.style.width = el.style.height = "100%";
+            el.onclick = () => select(d.k); nkb.appendChild(el);
+        });
+        syncUI();
+    }
+
+    function select(k) {
+        if(selectedKey) document.querySelector(`[data-key="${selectedKey}"]`)?.classList.remove('active');
+        selectedKey = k;
+        document.querySelector(`[data-key="${k}"]`).classList.add('active');
+        document.getElementById('key-info').innerHTML = `Key: <b>${k}</b>`;
+        document.getElementById('cmd-input').disabled = false;
+        document.getElementById('cmd-input').value = binds[k] || '';
+        document.getElementById('actions').style.display = 'block';
+        updatePreview();
+    }
+
+    function saveBind() {
+        const val = document.getElementById('cmd-input').value.trim();
+        if(val) binds[selectedKey] = val; else delete binds[selectedKey];
+        syncUI();
+    }
+
+    function deleteBind() { delete binds[selectedKey]; document.getElementById('cmd-input').value = ''; syncUI(); }
+
+    function syncUI() {
+        document.querySelectorAll('.key').forEach(el => el.classList.toggle('has-bind', !!binds[el.dataset.key]));
+        const list = document.getElementById('binds-list');
+        list.innerHTML = '';
+        for(let k in binds) {
+            const code = unityCodes[k] || '???';
+            list.innerHTML += `
+                <div class="bind-item">
+                    <span class="bind-key-code">${code}:</span><span class="bind-command">${binds[k]}</span><span class="bind-key-name">(${k})</span>
+                </div>`;
+        }
+    }
+
+    function exportFile() {
+        let txt = "";
+        for(let k in binds) if(unityCodes[k]) txt += `${unityCodes[k]}:${binds[k]}\n`;
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type: 'text/plain'})); a.download = "cmdbinding.txt"; a.click();
+    }
+
+    function importFile(input) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const lines = e.target.result.split(/\r?\n/);
+            binds = {}; 
+            lines.forEach(l => {
+                const p = l.split(':');
+                if(p.length >= 2) {
+                    const c = parseInt(p[0].trim());
+                    const cmd = p.slice(1).join(':').trim();
+                    const kn = Object.keys(unityCodes).find(n => unityCodes[n] === c);
+                    if(kn) binds[kn] = cmd;
+                }
+            });
+            syncUI();
+        };
+        reader.readAsText(input.files[0]);
+        input.value = '';
+    }
+
+    function copyPath() { navigator.clipboard.writeText("C:\\Users\\(ВАШ ПОЛЬЗОВАТЕЛЬ)\\AppData\\Roaming\\SCP Secret Laboratory\\cmdbinding.txt"); alert("Путь скопирован!"); }
+    function switchTab(t) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(t + '-section').classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+    function updatePreview() { document.getElementById('preview').textContent = `Code: ${unityCodes[selectedKey] || '???'}:${document.getElementById('cmd-input').value || '...'}`; }
+
+    document.getElementById('cmd-input').oninput = updatePreview;
+    setInterval(() => document.getElementById('clock').textContent = new Date().toLocaleTimeString(), 1000);
+    init();
+</script>
+</body>
+</html>
