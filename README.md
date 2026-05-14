@@ -1,7 +1,6 @@
 # ⌨️ SCP:SL Bind Editor
 
 ![Style](https://img.shields.io/badge/Style-FLXP--Project-8a2be2?style=for-the-badge)
-![Monospace](https://img.shields.io/badge/Font-JetBrains_Mono-00f2ff?style=for-the-badge)
 
 Специализированная утилита для визуального редактирования консольных биндов в игре **SCP: Secret Laboratory**. Позволяет настраивать привязку команд к клавишам через интерактивный интерфейс.
 
