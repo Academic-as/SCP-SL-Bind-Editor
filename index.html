@@ -118,7 +118,7 @@
                 <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 20px;">Для очистки биндов в игре необходимо вручную удалить содержимое файла конфигурации.</p>
                 <div class="terminal">
                     <div>Пожалуйста, перейдите по пути:</div>
-                    <div class="path-box" onclick="copyPath()"><code>C:\\Users\\%USERNAME%\\AppData\\Roaming\\SCP Secret Laboratory\\cmdbinding.txt</code></div>
+                    <div class="path-box" onclick="copyPath()"><code>C:\Users\%USERNAME%\AppData\Roaming\SCP Secret Laboratory\cmdbinding.txt</code></div>
                     <div>* Нажмите на путь, чтобы скопировать путь к файлу</div>
                 </div>
             </div>
@@ -161,6 +161,10 @@
         '0': 48, '1': 49, '2': 50, '3': 51, '4': 52, '5': 53, '6': 54, '7': 55, '8': 56, '9': 57,
         'Esc': 27, 'F1': 282, 'F2': 283, 'F3': 284, 'F4': 285, 'F5': 286, 'F6': 287, 'F7': 288, 'F8': 289, 'F9': 290, 'F10': 291, 'F11': 292, 'F12': 293,
         'Backspace': 8, 'Tab': 9, 'Enter': 13, 'Caps': 301, 'Shift': 304, 'Ctrl': 306, 'Alt': 308, 'Space': 32,
+        
+        // Спецсимволы
+        '[': 91, ']': 93, ';': 59, "'": 39, ',': 44, '.': 46, '/': 47, '\\': 92, '-': 45, '=': 61, '`': 96,
+        
         'Num0': 256, 'Num1': 257, 'Num2': 258, 'Num3': 259, 'Num4': 260, 'Num5': 261, 'Num6': 262, 'Num7': 263, 'Num8': 264, 'Num9': 265,
         'Num.': 266, 'Num/': 267, 'Num*': 268, 'Num-': 269, 'NumPlus': 270, 'NumEnter': 271, 'Mouse4': 326, 'Mouse5': 327
     };
@@ -208,7 +212,8 @@
     function select(k) {
         if(selectedKey) document.querySelector(`[data-key="${selectedKey}"]`)?.classList.remove('active');
         selectedKey = k;
-        document.querySelector(`[data-key="${k}"]`).classList.add('active');
+        const keyEl = document.querySelector(`[data-key="${k}"]`);
+        if(keyEl) keyEl.classList.add('active');
         document.getElementById('key-info').innerHTML = `Key: <b>${k}</b>`;
         document.getElementById('cmd-input').disabled = false;
         document.getElementById('cmd-input').value = binds[k] || '';
@@ -263,14 +268,23 @@
         input.value = '';
     }
 
-    function copyPath() { navigator.clipboard.writeText("C:\\Users\\%USERNAME%\\AppData\\Roaming\\SCP Secret Laboratory\\cmdbinding.txt"); alert("Путь скопирован!"); }
+    // ИСПРАВЛЕНО: Двойные слеши для корректного копирования в буфер
+    function copyPath() { 
+        navigator.clipboard.writeText("C:\\Users\\%USERNAME%\\AppData\\Roaming\\SCP Secret Laboratory\\cmdbinding.txt"); 
+        alert("Путь скопирован!"); 
+    }
+    
     function switchTab(t) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(t + '-section').classList.add('active');
+        const targetSection = document.getElementById(t + '-section');
+        if(targetSection) targetSection.classList.add('active');
         event.currentTarget.classList.add('active');
     }
-    function updatePreview() { document.getElementById('preview').textContent = `Code: ${unityCodes[selectedKey] || '???'}:${document.getElementById('cmd-input').value || '...'}`; }
+
+    function updatePreview() { 
+        document.getElementById('preview').textContent = `Code: ${unityCodes[selectedKey] || '???'}:${document.getElementById('cmd-input').value || '...'}`; 
+    }
 
     document.getElementById('cmd-input').oninput = updatePreview;
     setInterval(() => document.getElementById('clock').textContent = new Date().toLocaleTimeString(), 1000);
