@@ -51,7 +51,7 @@
         .kb-section { display: flex; flex-direction: column; gap: 8px; }
         .row { display: flex; gap: 8px; }
 
-        /* ИСПРАВЛЕНО: Информационная статус-плашка вместо блокирующего оверлея */
+        /* Информационная статус-плашка вместо блокирующего оверлея */
         .preset-status-bar {
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(138, 43, 226, 0.08); border: 1px dashed var(--flxp-purple);
@@ -156,7 +156,7 @@
     <div class="main-side">
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('creator')">Bind Editor</button>
-            <button class="tab-btn" onclick="switchTab('flx')">Популярные бинды на FLX <span class="badge badge-flx">FLX</span></button>
+            <button class="tab-btn" onclick="switchTab('flx')">Популярные бинды <span class="badge badge-flx">FLX</span></button>
             <button class="tab-btn" onclick="switchTab('wipe')">Wipe System <span class="badge">DEV</span></button>
         </div>
 
@@ -272,6 +272,26 @@
                     </div>
                 </div>
             </div>
+
+            <div class="glass-card" style="margin-top: 25px;">
+                <span class="panel-title" style="color: var(--flxp-cyan)">Emotion Matrix</span>
+                <div style="margin-bottom: 20px; font-size: 14px; color: rgba(255,255,255,0.6);">
+                    Выберите мимику персонажа (только для Учёных, Класса-D и Охраны).
+                </div>
+                <div style="max-width: 400px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <select id="emotion-select" class="flx-select" onchange="selectEmotion(this.value)">
+                        <option value="emotion neutral">Neutral (Стандартное)</option>
+                        <option value="emotion happy">Happy (Легкая улыбка)</option>
+                        <option value="emotion awkwardsmile">Awkward Smile (Неловкая)</option>
+                        <option value="emotion scared">Scared (Испуганное)</option>
+                        <option value="emotion angry">Angry (Злое лицо)</option>
+                        <option value="emotion chad">Chad (Гигачад)</option>
+                        <option value="emotion ogre">Ogre (Шрек)</option>
+                    </select>
+                    <div class="flx-cmd-badge" id="emotion-badge">emotion neutral</div>
+                    <button class="flx-btn" onclick="prepareEmotionBind()">Выбрать клавишу</button>
+                </div>
+            </div>
         </div>
 
         <div id="wipe-section" class="section">
@@ -333,7 +353,7 @@
     const unityCodes = {
         'A': 97, 'B': 98, 'C': 99, 'D': 100, 'E': 101, 'F': 102, 'G': 103, 'H': 104, 'I': 105, 'J': 106, 'K': 107, 'L': 108, 'M': 109, 'N': 110, 'O': 111, 'P': 112, 'Q': 113, 'R': 114, 'S': 115, 'T': 116, 'U': 117, 'V': 118, 'W': 119, 'X': 120, 'Y': 121, 'Z': 122,
         '0': 48, '1': 49, '2': 50, '3': 51, '4': 52, '5': 53, '6': 54, '7': 55, '8': 56, '9': 57,
-        'Esc': 27, 'F1': 282, 'F2': 283, 'F3': 284, 'F4': 285, 'F5': 286, 'F6': 287, 'F7': 288, 'F8': 289, 'F9': 290, 'F10': 291, 'F11': 292, 'F12': 293,
+        'Esc': 27, 'F1': 282, 'F2': 283, 'F3': 284, 'F4': 285, 'F5': 286, 'F6': 287, 'F7': 288, 'F8': 289, 'F9': 290, 'F10': 291, 'F12': 293,
         'Backspace': 8, 'Tab': 9, 'Enter': 13, 'Caps': 301, 'Shift': 304, 'Ctrl': 306, 'Alt': 308, 'Space': 32,
         '[': 91, ']': 93, ';': 59, "'": 39, ',': 44, '.': 46, '/': 47, '\\': 92, '-': 45, '=': 61, '`': 96,
         'Num0': 256, 'Num1': 257, 'Num2': 258, 'Num3': 259, 'Num4': 260, 'Num5': 261, 'Num6': 262, 'Num7': 263, 'Num8': 264, 'Num9': 265,
@@ -401,6 +421,20 @@
         document.getElementById('scp049-badge').textContent = val;
     }
 
+    function selectEmotion(val) {
+        document.getElementById('emotion-badge').textContent = val;
+        if (selectedKey) {
+            document.getElementById('cmd-input').value = val;
+            updatePreview();
+        }
+    }
+
+    function prepareEmotionBind() {
+        const selectEl = document.getElementById('emotion-select');
+        const btn = event.currentTarget;
+        preparePresetBind(selectEl.value, 'Emotion: ' + selectEl.value, btn);
+    }
+
     function select(k) {
         if(selectedKey) document.querySelectorAll(`[data-key="${selectedKey}"]`).forEach(el => el.classList.remove('active'));
         selectedKey = k;
@@ -418,7 +452,6 @@
             document.getElementById('cmd-input').value = activePresetCommand;
             binds[k] = activePresetCommand;
             
-            // Прячем плашку статус-бара
             document.getElementById('preset-bar').classList.remove('active');
             activePresetCommand = null;
             resetPresetButtons();
@@ -439,11 +472,9 @@
         btn.classList.add('waiting');
         btn.textContent = 'Ожидание клавиши...';
         
-        // Показываем верхний статус-бар и меняем текст
         document.getElementById('overlay-preset-name').textContent = readableName;
         document.getElementById('preset-bar').classList.add('active');
         
-        // Возвращаемся на вкладку редактора
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('creator-section').classList.add('active');
